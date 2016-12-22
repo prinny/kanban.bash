@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# commandline asciii kanban board for minimalist productivity bash hackers (csv-based)
+# commandline asciii kanban board for minimalist productivity bash hackers (csv-bagsed)
 #
 # Usage:
 # 
@@ -65,13 +65,15 @@ fi
 config_example="# kanban config file
 
 # kanban config file
-statuses=('BACKLOG' 'HOLD' 'DOING' 'CODE' 'DONE') 
+# Update with more relevant statuses.
+statuses=('BACKLOG' 'READY' 'DOING' 'REVIEW' 'DONE') 
 
 # maximum amount of todos within status (triggers warning when exceeds)
-declare -A maximum_todo
-maximum_todo['HOLD']=5
-maximum_todo['DOING']=4
-maximum_todo['CODE']=3
+# Commented out due to errors in OSX
+# declare -A maximum_todo
+# maximum_todo['HOLD']=5
+# maximum_todo['DOING']=4
+# maximum_todo['CODE']=3
 "
 
 # usage: fb put <x> <y> <string>
@@ -98,7 +100,7 @@ createconfig(){
 }
 
 tags(){
-  cat $KANBANFILE | awk -F',' '{ print $2 }' | sed 's/,.*//g;s/"//g' | tail -n+2 | sort | uniq | tr '\n' ' '
+  cat $KANBANFILE | awk -F',' '{ print $2 }' | gsed 's/,.*//g;s/"//g' | tail -n+2 | sort | uniq | tr '\n' ' '
 }
 
 get_statuses(){
@@ -162,7 +164,7 @@ do_alert(){
 
 create_index(){
   rm $TMP.index &>/dev/null
-  cat -n $KANBANFILE | sed 's/^[ ]\+//g;s/\t/,/g' >> $TMP.index
+  cat -n $KANBANFILE | gsed 's/^[ ]\+//g;s/\t/,/g' >> $TMP.index
 }
 
 columnize(){
@@ -172,18 +174,18 @@ columnize(){
   for status in "${statuses[@]}"; do 
     [[ -n $SMALLSCREEN ]] && ! [[ "${SMALLSCREEN[@]}" =~ $status ]] && continue
     echo -e "|_$status\n|+$(strtoline "$status" "~")~\n" > $TMP.col.$i
-    cat $TMP.index | grep "$status" | sed 's/["]\?'$status'["]\?//g' | printcsv 5 | sed 's/^/| /g'  | unexpand >> $TMP.col.$i
+    cat $TMP.index | grep "$status" | gsed 's/["]\?'$status'["]\?//g' | printcsv 5 | gsed 's/^/| /g'  | unexpand >> $TMP.col.$i
     #echo "$( cat $TMP.col.$i )" > $TMP.col.$i
     i=$((i+1))
   done 
-  pr -m -t -w$X -S"      "  $TMP.col.* | lines 
+  gpr -m -t -w$X -S"      "  $TMP.col.* | lines 
   rm $TMP.col.* # print and cleanup
 }
 
 lines(){
   if [[ -n $UTF8 ]]; then
-    cat - | sed 's/| /├╴/g;s/~/━/g;s/|+/┕━/g;s/|_/│ /g' # nice utf8 lines
-  else cat - | sed 's/~/-/g;s/|+/|/g;s/|+/| /g;s/|_/| /g'; fi
+    cat - | gsed 's/| /├╴/g;s/~/━/g;s/|+/┕━/g;s/|_/│ /g' # nice utf8 lines
+  else cat - | gsed 's/~/-/g;s/|+/|/g;s/|+/| /g;s/|_/| /g'; fi
 }
 
 align(){
@@ -209,9 +211,9 @@ update_item_status(){
   item="$( cat $KANBANFILE | awk "{ if (NR==$1) print \$0 }" )"
   [[ ${#item} == 0 ]] && echo "item $1 not found" && exit 1 
   if [[ -n "$2" ]]; then  # status change 
-    status="$(echo "$item" | awk -F',' '{ print $1 }' | sed 's/"//g' )"
-    flags="$(echo "$item"  | awk -F',' '{ print $4 }' | sed 's/"//g' )"
-    dates="$(echo "$item"  | awk -F',' '{ print $5 }' | sed 's/"//g' )"
+    status="$(echo "$item" | awk -F',' '{ print $1 }' | gsed 's/"//g' )"
+    flags="$(echo "$item"  | awk -F',' '{ print $4 }' | gsed 's/"//g' )"
+    dates="$(echo "$item"  | awk -F',' '{ print $5 }' | gsed 's/"//g' )"
     newflags="$flags${2:0:1}"
     newdates="$dates $(get_current_date)"
     [[ "$2" =~ "DONE" ]] && date="$(get_current_date)"
@@ -219,7 +221,7 @@ update_item_status(){
     newitem="${newitem/$status/$2}"
     newitem="${newitem/$flags/$newflags}"
     newitem="${newitem/$dates/$newdates}"
-    sed -i "s|$item|$newitem|g" $KANBANFILE 
+    gsed -i "s|$item|$newitem|g" $KANBANFILE 
     echo "$status -> $2"
   fi
 }
@@ -233,7 +235,7 @@ update_item(){
 #
 '"$item" > $TMP.update
   ${EDITOR} $TMP.update
-  sed -i "s|$item|$(cat $TMP.update | tail -n1)|g" $KANBANFILE 
+  gsed -i "s|$item|$(cat $TMP.update | tail -n1)|g" $KANBANFILE 
   echo "updated item $1"
 }
 
@@ -241,9 +243,9 @@ printcsv(){
   csv="$HEADER$(cat -)"
   [[ ! -n $1 ]] && max=999999 || max=$1
   [[ ! -n $2 ]] && min=1 || min=$1
-  echo -e "$csv" | sed 's/,"",/," ",/g' | gawk -vFS='^"|","|"$|",|,"|,'            \
+  echo -e "$csv" | gsed 's/,"",/," ",/g' | gawk -vFS='^"|","|"$|",|,"|,'            \
     '{out=""; for(i='$min';i<NF+1&&i<max;i++) out=out"\t"$i; print out }'      \
-    max=$max | sed 's/""/"/g' | column -t -s $'\t'                   
+    max=$max | gsed 's/""/"/g' | column -t -s $'\t'                   
 }
 
 # source config
@@ -265,4 +267,4 @@ if [[ -n "$1" ]]; then
     *)       "$@"
              ;;
   esac
-else grep -A29 "^# Usage:" "$0" | sed 's/^# //g'; fi
+else grep -A29 "^# Usage:" "$0" | gsed 's/^# //g'; fi
