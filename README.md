@@ -8,6 +8,9 @@ personal commandline todomanager / kanbanboard csv-viewer for minimalist product
 > WHY: bitbucket/github/issuetrackers are great for teams, but how to manage todo's on a macro- or microlevel? Sure, you can mark an issue as done, but are you productive? KANBAN.bash can be a very simple but powerful tool to manage and measure productivity.
 
 ## Install
+### Requirements
+    Homebrew coreutils package
+    brew install coreutils
 
     $ wget "https://raw.githubusercontent.com/coderofsalvation/kanban.bash/master/kanban"
     $ chmod 755 kanban
