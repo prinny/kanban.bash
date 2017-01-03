@@ -112,7 +112,7 @@ add_interactive(){
   read -p "> " status
   echo "enter one of tags: $(tags)"
   read -p "> " tag
-  add "$status" "$tag" "$description"
+  add "${status^^}" "$tag" "$description"
 }
 
 add(){
