@@ -54,9 +54,16 @@ if [ -z "$EDITOR" ] ; then
     EDITOR="vim"
 fi
 
+# Redirect gsed to sed command if that alternative is available
 if [ -z "`which gsed`" ] ; then
-    echo 'gsed not found, exiting'
-    exit 1
+    if [ ! -z "`which sed`" ] ; then
+        gsed () {
+            `which sed`
+        }
+    else
+        echo 'gsed/sed not found, exiting'
+        exit 1
+    fi
 fi
 
 BOX=(┌ ─ ┐ └ ┘ │ ┤ ┴ ┬ ├ ┼)
